@@ -44,11 +44,11 @@ security_group:
 
 service_tier:
   type: str
-  help: "ASSUMPTION: (F17) service tier A, B or C sets the coverage floor (doc 24 'Service tiers and floors': 90, 85, 80)"
+  help: "Service tier: how much impact a bug here could have. It sets the minimum test coverage CI enforces (ASSUMPTION: (F17) doc 24 'Service tiers and floors')"
   choices:
-    - C
-    - B
-    - A
+    "C - Internal tooling, low impact (utilities, reports); coverage floor 80%": C
+    "B - Customer-facing, no financial decision (portals, notifications, documents); coverage floor 85%": B
+    "A - Affects money, coverage, claims, eligibility or regulated records (pricing, claims, policy admin); coverage floor 90%": A
   default: C
 
 coverage_floor:
