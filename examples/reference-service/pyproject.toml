@@ -114,7 +114,7 @@ relative_files = true
 omit = ["mutants/*"]
 
 [tool.coverage.report]
-# ASSUMPTION (F17): floor for service tier C (doc 24). Floors only ratchet up (TST-026).
+# ASSUMPTION: (F17) floor for service tier C (doc 24). Floors only ratchet up (TST-026).
 fail_under = 80
 show_missing = true
 exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload", "if __name__ == .__main__.:"]

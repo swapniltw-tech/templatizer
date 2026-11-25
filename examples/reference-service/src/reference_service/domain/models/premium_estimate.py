@@ -1,4 +1,4 @@
-"""Domain model for a premium estimate."""
+"""Domain model for a premium estimate (STR-008, ARC-012: never returned by an endpoint as is)."""
 
 from dataclasses import dataclass
 

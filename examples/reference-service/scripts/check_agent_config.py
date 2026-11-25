@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Validate committed Claude Code configuration. Exit 1 on any problem.
 
+Implements AGT-001, AGT-010, AGT-011, AGT-014, AGT-016 (optional --schema), AGT-017/AGT-021 (broad
+allow rules and bypass default), AGT-018 (.env denies), AGT-028 (.mcp.json entries have a type).
+
 Usage: scripts/check_agent_config.py [repo-dir] [--schema settings.schema.json]
 Needs PyYAML; jsonschema is only needed with --schema.
 """

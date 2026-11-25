@@ -3,8 +3,8 @@
 # violation per contract broke the matching contract). Owned by the architecture owner in CODEOWNERS
 # (ARC-019): do not edit to make a build pass, and every ignore_imports entry needs an ADR or
 # waiver reference plus an expiry date (ARC-020).
-# ASSUMPTION (F14): `domain` may import pydantic. If forbidden, add `pydantic` to domain-pure.
-# ASSUMPTION (F15): no contract yet for application workflows importing `ai/`.
+# ASSUMPTION: (F14) `domain` may import pydantic. If forbidden, add `pydantic` to domain-pure.
+# ASSUMPTION: (F15) no contract yet for application workflows importing `ai/`.
 [importlinter]
 root_package = reference_service
 include_external_packages = True

@@ -1,4 +1,4 @@
-"""Use case maps the domain result into a PremiumEstimate."""
+"""Use case maps the domain result into a PremiumEstimate (TST-002, TST-004 mirror layout)."""
 
 from reference_service.application.use_cases.estimate_premium import estimate_premium
 

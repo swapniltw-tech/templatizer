@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Implements AGT-024 (script under .claude/hooks), AGT-026 (guardrail; CI is the control),
+# AGT-027 (quick: formatter and linter on the edited file only).
 # PostToolUse hook (Edit|Write): format and lint the edited Python file.
 # Exit 2 sends the output back to the agent as feedback; CI remains the real gate.
 set -u

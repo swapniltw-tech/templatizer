@@ -1,4 +1,4 @@
-"""Use case: estimate a monthly premium. Pure orchestration of the domain rule (no ports needed)."""
+"""Use case: estimate a monthly premium (ARC-003, ARC-011). No ports needed: the rule is pure."""
 
 from reference_service.domain.models.premium_estimate import PremiumEstimate
 from reference_service.domain.rules.premium import monthly_premium_cents

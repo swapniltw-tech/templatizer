@@ -6,6 +6,8 @@ paths:
 
 # Tests and evals
 
+<!-- Implements AGT-010, AGT-011 (frontmatter is only a quoted `paths` list), TST-003, TST-008, TST-036, TST-042. -->
+
 - Write the failing test first, then the code. Never weaken, skip or delete a test to make it pass.
 - Unit tests never call the network or a live model; inject the fake model client.
 - Test data is synthetic. Never paste real customer data or real identifiers.

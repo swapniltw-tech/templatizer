@@ -1,5 +1,7 @@
 # reference-service
 
+<!-- Implements STR-004: purpose, owning team, make install / make run, OpenAPI link, runbook link. -->
+
 Reference service generated from the template: one synthetic premium-estimate endpoint.
 
 - **Owner:** `@example-org/platform-team` (see `CODEOWNERS`)

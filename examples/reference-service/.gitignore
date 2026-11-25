@@ -1,4 +1,7 @@
 # ===== Canonical .gitignore for Python services (docs/07-ignore-files.md) =====
+# Implements IGN-001..IGN-010 (secrets, agent personal files, state, caches, evals). Add repo-specific
+# entries only below the marker at the end; removals need a waiver (IGN-001). Checked by scripts/check_ignore.sh.
+# ASSUMPTION: (F3) the Terraform block applies once Terraform is confirmed (doc 07 VERIFY).
 
 # --- Secrets and local environment ---
 .env

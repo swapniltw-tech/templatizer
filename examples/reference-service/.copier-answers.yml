@@ -1,4 +1,4 @@
-# Changes here will be overwritten by Copier; used by `copier update`. Commit this file.
+# Template provenance for `copier update` (TEC-021: stack changes are recorded). Changes here will be overwritten by Copier; used by `copier update`. Commit this file.
 _src_path: ../../templates/service
 description: 'Reference service generated from the template: one synthetic premium-estimate
     endpoint.'

@@ -1,6 +1,6 @@
 # reference-service
 
-Reference service generated from the template: one synthetic premium-estimate endpoint. Risk tier: C (ASSUMPTION F17: tiers are proposals).
+Reference service generated from the template: one synthetic premium-estimate endpoint. Risk tier: C (ASSUMPTION: (F17) tiers are proposals).
 
 <!-- Maintainer note: tool-neutral instructions live here; CLAUDE.md imports this file with
 @AGENTS.md as its first line and adds Claude-specific content only (AGT-006, AGT-007). -->
@@ -40,6 +40,8 @@ Dependency rules are enforced by import-linter (`.importlinter`, run by `make li
 | `.claude/rules/` | Path-scoped rules; load when you touch matching files |
 
 Not created yet (add with an ADR when needed): `registry/`, `prompts/`, `infra/`, `docs/runbooks/`.
+
+ASSUMPTION: (F3) infrastructure is Terraform under `infra/`; the `terraform apply` ban in the never-list and the Terraform entries in `.gitignore` and `CODEOWNERS` apply once that is final.
 
 ## Hard rules (never)
 
