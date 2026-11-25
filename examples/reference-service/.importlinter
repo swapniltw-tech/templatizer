@@ -1,0 +1,128 @@
+# Architecture contracts. Implements ARC-002..ARC-009, ARC-015, ARC-016, ARC-019..ARC-022, STR-007.
+# Source: doc 03 "Fitness-test configuration" (run on a toy tree: 10 contracts kept; one injected
+# violation per contract broke the matching contract). Owned by the architecture owner in CODEOWNERS
+# (ARC-019): do not edit to make a build pass, and every ignore_imports entry needs an ADR or
+# waiver reference plus an expiry date (ARC-020).
+# ASSUMPTION (F14): `domain` may import pydantic. If forbidden, add `pydantic` to domain-pure.
+# ASSUMPTION (F15): no contract yet for application workflows importing `ai/`.
+[importlinter]
+root_package = reference_service
+include_external_packages = True
+
+[importlinter:contract:layers]
+name = Inbound layering: api -> application -> domain (ARC-003)
+type = layers
+layers =
+    reference_service.api
+    reference_service.application
+    reference_service.domain
+
+[importlinter:contract:domain-pure]
+name = Domain imports nothing outward and no I/O or framework or LLM libraries (ARC-002, STR-008)
+type = forbidden
+source_modules =
+    reference_service.domain
+forbidden_modules =
+    reference_service.api
+    reference_service.application
+    reference_service.adapters
+    reference_service.ai
+    reference_service.security
+    reference_service.config
+    reference_service.observability
+    reference_service.main
+    httpx
+    fastapi
+    openai
+    azure
+    sqlalchemy
+
+[importlinter:contract:api-no-adapters]
+name = API receives adapters by injection and never imports them (STR-009)
+type = forbidden
+source_modules =
+    reference_service.api
+forbidden_modules =
+    reference_service.adapters
+
+[importlinter:contract:application-no-io]
+name = Application depends on ports, never on adapters or api (ARC-003)
+type = forbidden
+source_modules =
+    reference_service.application
+forbidden_modules =
+    reference_service.adapters
+    reference_service.api
+
+[importlinter:contract:adapters-not-api]
+name = Adapters never import the transport layer, agents or tools (ARC-004)
+type = forbidden
+source_modules =
+    reference_service.adapters
+forbidden_modules =
+    reference_service.api
+    reference_service.ai.agents
+    reference_service.ai.tools
+
+[importlinter:contract:tools-no-adapters]
+name = AI tools call use cases, never adapters or api (ARC-005, STR-011)
+type = forbidden
+source_modules =
+    reference_service.ai.tools
+forbidden_modules =
+    reference_service.adapters
+    reference_service.api
+
+[importlinter:contract:agents-no-api]
+name = Agents never import api or non-LLM adapters (ARC-006, STR-011)
+type = forbidden
+source_modules =
+    reference_service.ai.agents
+forbidden_modules =
+    reference_service.api
+    reference_service.adapters.db
+    reference_service.adapters.http_clients
+    reference_service.adapters.queue
+    reference_service.adapters.storage
+    reference_service.adapters.keyvault
+
+[importlinter:contract:main-is-root]
+name = Only the entry point may import main (ARC-008)
+type = forbidden
+source_modules =
+    reference_service.api
+    reference_service.application
+    reference_service.domain
+    reference_service.adapters
+    reference_service.ai
+forbidden_modules =
+    reference_service.main
+
+[importlinter:contract:model-sdk-only-in-llm-adapter]
+name = Model SDKs are imported only by adapters.llm (ARC-007)
+type = forbidden
+source_modules =
+    reference_service.api
+    reference_service.application
+    reference_service.domain
+    reference_service.ai
+forbidden_modules =
+    azure
+    openai
+    httpx
+allow_indirect_imports = True
+
+[importlinter:contract:common-is-leaf]
+name = common imports nothing from the package (ARC-009)
+type = forbidden
+source_modules =
+    reference_service.common
+forbidden_modules =
+    reference_service.api
+    reference_service.application
+    reference_service.domain
+    reference_service.adapters
+    reference_service.ai
+    reference_service.security
+    reference_service.config
+    reference_service.observability

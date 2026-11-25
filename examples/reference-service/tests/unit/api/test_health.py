@@ -1,0 +1,75 @@
+"""Probe endpoints, request IDs and problem-details errors (REL-019, OBS-006, API-009, API-013)."""
+
+import pytest
+from fastapi.testclient import TestClient
+
+from reference_service.config import Settings
+from reference_service.domain.errors import DomainError
+from reference_service.main import create_app
+
+
+@pytest.fixture
+def client() -> TestClient:
+    return TestClient(create_app(Settings(_env_file=None)), raise_server_exceptions=False)
+
+
+@pytest.mark.parametrize("path", ["/livez", "/readyz"])
+def test_probe_reports_ok(client: TestClient, path: str) -> None:
+    response = client.get(path)
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_well_formed_request_id_is_echoed(client: TestClient) -> None:
+    response = client.get("/livez", headers={"X-Request-ID": "req-1234.abcd"})
+    assert response.headers["X-Request-ID"] == "req-1234.abcd"
+
+
+def test_malformed_request_id_is_replaced(client: TestClient) -> None:
+    response = client.get("/livez", headers={"X-Request-ID": "bad id with spaces"})
+    assert response.headers["X-Request-ID"] != "bad id with spaces"
+    assert len(response.headers["X-Request-ID"]) == 32
+
+
+def test_unknown_path_returns_problem_details(client: TestClient) -> None:
+    response = client.get("/nope", headers={"X-Request-ID": "req-1234.abcd"})
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert response.json() == {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "trace_id": "req-1234.abcd",
+    }
+
+
+def test_unhandled_error_returns_problem_without_internals() -> None:
+    app = create_app(Settings(_env_file=None))
+
+    @app.get("/boom")
+    def boom() -> None:
+        msg = "secret internal detail"
+        raise RuntimeError(msg)
+
+    response = TestClient(app, raise_server_exceptions=False).get("/boom")
+    assert response.status_code == 500
+    assert response.headers["content-type"].startswith("application/problem+json")
+    assert "secret internal detail" not in response.text
+    assert response.json()["title"] == "Internal Server Error"
+
+
+def test_domain_error_maps_to_422_problem_without_message() -> None:
+    class QuoteRejectedError(DomainError):
+        code = "quote_rejected"
+
+    app = create_app(Settings(_env_file=None))
+
+    @app.get("/rejected")
+    def rejected() -> None:
+        msg = "internal reason"
+        raise QuoteRejectedError(msg)
+
+    response = TestClient(app).get("/rejected")
+    assert response.status_code == 422
+    assert response.json()["code"] == "quote_rejected"
+    assert "internal reason" not in response.text

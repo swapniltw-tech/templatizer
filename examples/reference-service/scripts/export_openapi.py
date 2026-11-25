@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Regenerate docs/api/openapi.yaml from the running app's schema (API-001, API-002).
+
+Usage: uv run --locked python scripts/export_openapi.py
+Review the diff in the MR: the file is the contract; the drift test fails when it is stale.
+"""
+
+from pathlib import Path
+
+import yaml
+
+from reference_service.config import Settings
+from reference_service.main import create_app
+
+OUT = Path(__file__).resolve().parent.parent / "docs" / "api" / "openapi.yaml"
+
+
+def main() -> None:
+    schema = create_app(Settings(_env_file=None)).openapi()
+    OUT.write_text(yaml.safe_dump(schema, sort_keys=True, allow_unicode=True), encoding="utf-8")
+    print(f"wrote {OUT}")
+
+
+if __name__ == "__main__":
+    main()

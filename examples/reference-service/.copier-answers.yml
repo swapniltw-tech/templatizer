@@ -1,0 +1,9 @@
+# Changes here will be overwritten by Copier; used by `copier update`. Commit this file.
+_src_path: ../../templates/service
+description: 'Reference service generated from the template: one synthetic premium-estimate
+    endpoint.'
+package_name: reference_service
+platform_group: example-org/platform-team
+security_group: example-org/security-team
+service_name: reference-service
+service_tier: C

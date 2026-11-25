@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make check)",
+      "Bash(make fmt)",
+      "Bash(make lint)",
+      "Bash(make typecheck)",
+      "Bash(make test)",
+      "Bash(make test-unit)",
+      "Bash(make test-integration)",
+      "Bash(uv run --locked pytest *)",
+      "Bash(uv run --locked ruff *)",
+      "Bash(uv run --locked mypy *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "ask": [
+      "Bash(make eval)",
+      "Bash(make build)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Edit(./.claude/**)",
+      "Edit(./.mcp.json)",
+      "Edit(./CODEOWNERS)",
+      "Edit(./.gitlab-ci.yml)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Read(secrets/**)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Edit(./uv.lock)",
+      "Edit(./**/*.tfstate)",
+      "Bash(terraform apply *)",
+      "Bash(terraform destroy *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(printenv *)",
+      "Bash(az keyvault secret show *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-protected-paths.sh",
+            "args": [],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/lint-after-edit.sh",
+            "args": [],
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

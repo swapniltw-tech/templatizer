@@ -1,0 +1,49 @@
+components:
+  schemas:
+    StatusResponse:
+      additionalProperties: false
+      description: Body of /livez and /readyz.
+      properties:
+        status:
+          const: ok
+          title: Status
+          type: string
+      required:
+      - status
+      title: StatusResponse
+      type: object
+info:
+  title: reference-service
+  version: 0.1.0
+openapi: 3.1.0
+paths:
+  /livez:
+    get:
+      description: The process is running.
+      operationId: get_livez
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: Successful Response
+      security: []
+      summary: Livez
+      tags:
+      - probes
+  /readyz:
+    get:
+      description: The service can accept traffic.
+      operationId: get_readyz
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: Successful Response
+      security: []
+      summary: Readyz
+      tags:
+      - probes

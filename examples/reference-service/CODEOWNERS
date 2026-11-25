@@ -1,0 +1,29 @@
+# Implements STR-034 (root file, default entry, groups only), STR-036, CIC-010, ARC-019 (architecture
+# config and fitness tests owned by the architecture owner). Source: doc 09. Group names are placeholders.
+# VERIFY: code owner approval enforcement tier (STR-035, F4). Paths for registry/, prompts/ and infra/
+# are listed ahead of those directories existing so they are owned from the first commit.
+# Default owner for everything
+* @example-org/platform-team
+
+[Infrastructure]
+/infra/ @example-org/platform-team @example-org/security-team
+/.gitlab-ci.yml @example-org/platform-team @example-org/security-team
+
+[Agent configuration][2]
+/.claude/ @example-org/platform-team @example-org/security-team
+/.mcp.json @example-org/platform-team @example-org/security-team
+/CLAUDE.md @example-org/platform-team
+/AGENTS.md @example-org/platform-team
+
+[AI registry and prompts]
+/registry/ @example-org/ai-governance @example-org/platform-team
+/prompts/ @example-org/ai-governance @example-org/platform-team
+/evals/**/thresholds.yaml @example-org/ai-governance
+
+[Architecture decisions and fitness tests]
+/docs/adr/ @example-org/architecture-guild
+/.importlinter @example-org/architecture-guild
+/tests/unit/architecture/ @example-org/architecture-guild
+
+[Ownership itself]
+/CODEOWNERS @example-org/platform-team @example-org/security-team

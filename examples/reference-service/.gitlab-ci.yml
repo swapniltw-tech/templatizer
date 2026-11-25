@@ -1,0 +1,109 @@
+# Implements: CIC-001 (runs make targets, pipeline must pass to merge), CIC-002 (MR + default branch),
+# CIC-003 (eval on AI/eval changes), CIC-004 (scanners), CIC-007 (pinned images), CIC-008 (timeout,
+# interruptible), TEC-002/TEC-010 (make check on two Python minors), TST-048/TST-049 (blocking tests,
+# JUnit + Cobertura artifacts), IGN-016, AGT-001/AGT-010/AGT-014/AGT-016/AGT-018/AGT-031 (agent-config
+# check), STR-027/STR-028 (commit subjects). Skeleton: doc 16; test job: doc 24.
+#
+# NOT VERIFIED: this file was not run in GitLab and not linted with GitLab's CI lint.
+# ASSUMPTION (F4): GitLab tier and runners. Everything in <angle brackets> is a placeholder.
+# ASSUMPTION: the job images below already contain uv, make and git (no approved image exists yet).
+# TODO: build/scan/sign/SBOM jobs (DEP-024, CIC-031), deploy jobs and Terraform jobs (CIC-021..CIC-029).
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+default:
+  interruptible: true
+  timeout: 20 minutes
+
+stages: [validate, test, eval, security, build]
+
+include:
+  # VERIFY: template paths and licence tier (doc 16). If unavailable, run the open-source scanners.
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+variables:
+  UV_PYTHON_DOWNLOADS: "0"  # use the interpreter in the job image so the matrix minor is the one tested
+
+.uv-job:
+  before_script:
+    - uv --version
+    - export UV_PYTHON="$PYTHON_MINOR"
+    - make install
+
+# TEC-002/TEC-010: the same `make check` developers run, on the two newest minors.
+# CIC-007 vs the matrix: one digest per minor (docs/FINDINGS.md F-09).
+check:
+  extends: .uv-job
+  stage: test
+  image: $PYTHON_IMAGE
+  parallel:
+    matrix:
+      - PYTHON_MINOR: ["3.14"]
+        PYTHON_IMAGE: ["<approved-registry>/python-uv@sha256:<digest-3.14>"]
+      - PYTHON_MINOR: ["3.15"]
+        PYTHON_IMAGE: ["<approved-registry>/python-uv@sha256:<digest-3.15>"]
+  script:
+    - make check
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'  # VERIFY: regex against the actual log format (doc 24)
+  artifacts:
+    when: always
+    reports:
+      junit: [reports/unit.xml, reports/integration.xml]  # VERIFY: junit key and list form (doc 24)
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  allow_failure: false
+
+# IGN-016, AGT-001.., STR-027/028: repository hygiene checks.
+repo-hygiene:
+  extends: .uv-job
+  stage: validate
+  image: <approved-registry>/python-uv@sha256:<digest-3.14>
+  variables:
+    PYTHON_MINOR: "3.14"
+    GIT_DEPTH: "0"  # full history so the commit range below resolves
+  script:
+    - scripts/check_ignore.sh
+    - uv run --locked python scripts/check_agent_config.py .
+    - uv run --locked python scripts/check_commit_msg.py "$CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD"
+  rules:
+    # VERIFY: CI_MERGE_REQUEST_DIFF_BASE_SHA name and availability for MR pipelines (doc 09).
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# CIC-003: model-quality evals when eval or AI code changes. Synthetic datasets only.
+evals:
+  extends: .uv-job
+  stage: eval
+  image: <approved-registry>/python-uv@sha256:<digest-3.14>
+  variables:
+    PYTHON_MINOR: "3.14"
+  script:
+    - make eval
+  rules:
+    - changes: [prompts/**/*, registry/**/*, evals/**/*, src/**/ai/**/*]
+
+# CIC-004: dependency audit and secret scan (make security). Gitleaks must exist in the image.
+dependency-audit:
+  extends: .uv-job
+  stage: security
+  image: <approved-registry>/python-uv@sha256:<digest-3.14>
+  variables:
+    PYTHON_MINOR: "3.14"
+  script:
+    - make security
+  allow_failure: false
+
+# Build only on the default branch (doc 16). Builder choice (kaniko, buildah, ...) is VERIFY: open.
+build-image:
+  stage: build
+  image: <approved-registry>/image-builder@sha256:<digest>
+  script:
+    - make build
+    # TODO: SBOM, image scan, sign (CIC-031, DEP-024); VERIFY: tools.
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
