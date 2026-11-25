@@ -1,0 +1,48 @@
+{
+  "_comment": "Selection of rules that become .claude/rules files in the service template. Only review/manual/runtime rules may be listed: anything tagged ci, lint or test already fails the build. `notes` are template-specific hints that do not come from rules.yml.",
+  "output_dir": "templates/service/template/.claude/rules",
+  "files": [
+    {
+      "name": "security",
+      "title": "Security and secrets (always loaded)",
+      "paths": [],
+      "rules": ["SEC-005", "SCR-029", "SCR-028", "SCR-026", "SCR-025", "SCR-024", "SCR-023", "SEC-028", "SEC-029"],
+      "notes": ["Deny rules in `.claude/settings.json` are guardrails, not a security boundary (AGT-020)."]
+    },
+    {
+      "name": "clean-code",
+      "title": "Clean code and scope (always loaded)",
+      "paths": [],
+      "rules": ["CLN-027", "CLN-028", "CLN-030", "CLN-032", "CLN-033", "PRC-023", "CLN-037", "CLN-038", "CLN-007"],
+      "notes": []
+    },
+    {
+      "name": "api-contracts",
+      "title": "HTTP API code",
+      "paths": ["src/*/api/**", "docs/api/**", "tests/contract/**"],
+      "rules": ["ARC-011", "ARC-012", "ARC-013", "API-003", "API-004", "API-007", "API-008", "API-010", "API-011", "API-012", "API-014", "API-017", "API-019", "API-020", "API-023"],
+      "notes": ["Change `docs/api/openapi.yaml` first with `scripts/export_openapi.py`; the contract test fails on drift (API-001, API-002).", "The liveness and readiness probes are the declared unauthenticated exception (docs/FINDINGS.md F-08)."]
+    },
+    {
+      "name": "architecture",
+      "title": "Architecture boundaries and ADRs",
+      "paths": [".importlinter", "tests/unit/architecture/**", "docs/adr/**", "src/*/adapters/**"],
+      "rules": ["ARC-019", "ARC-020", "ARC-023", "ARC-024", "ARC-027", "ARC-029", "ARC-030", "ARC-031", "ARC-033"],
+      "notes": ["Copy `docs/adr/0000-adr-template.md` for a new ADR."]
+    },
+    {
+      "name": "domain-code",
+      "title": "Domain and application code",
+      "paths": ["src/*/domain/**", "src/*/application/**"],
+      "rules": ["ARC-014", "ARC-010", "CLN-010", "STR-019", "CLN-008", "CLN-019", "CLN-005", "CLN-031"],
+      "notes": ["Money is integer cents, never floats; add Hypothesis property tests for invariants (TST-020)."]
+    },
+    {
+      "name": "observability",
+      "title": "Logging and telemetry",
+      "paths": ["src/**"],
+      "rules": ["OBS-002", "OBS-005", "OBS-008", "OBS-010", "OBS-011", "OBS-021", "OBS-007", "OBS-029", "OBS-027", "OBS-014"],
+      "notes": ["Tracing export is not set up in this template; do not initialise an OpenTelemetry distro without the ADR."]
+    }
+  ]
+}
