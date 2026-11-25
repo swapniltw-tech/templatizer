@@ -24,6 +24,7 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 | F-16 | PLAN, README | open | Stale rule count in PLAN.md |
 | F-17 | 02, 17, 24 | open | No authentication pattern for the example endpoint |
 | F-18 | 08, brief | worked around | Files that cannot cite rule IDs |
+| F-19 | 01, 00, 08, 09, 16 | open | Contradictions found by the independent cold-read (doc 01 and others) |
 
 ## F-01 No web framework is named
 - **Docs:** 00 (reference stack), 03 (contracts forbid `fastapi` in `domain/`), 17 (OpenAPI, pydantic models, problem details).
@@ -45,7 +46,8 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 
 ## F-04 Where `lint-imports` runs
 - **Docs:** ARC-015 requires `lint-imports` as part of `make lint`; STR-007 says it runs in `make check`; doc 00's "standard Makefile" `lint` target is `ruff check .` only, and TEC-009 / the failure-modes table say to copy that Makefile.
-- **Done:** `lint` runs `ruff check .` then `lint-imports` (follows the explicit MUST in ARC-015, which also records the same assumption). The Makefile header says so.
+- **Also:** PRC-015 says no check may exist only in CI without a local equivalent, yet IGN-016, AGT-001 and the other doc 08/07 checks have no Makefile hook.
+- **Done:** `lint` runs `ruff check .`, `lint-imports` (ARC-015), `scripts/check_ignore.sh` and `scripts/check_agent_config.py` (so they run in `make check` and CI). `check_ignore.sh` needs a git work tree, so run `git init` before `make check`. The commit-subject check stays CI-only (it needs a git range); TODO in the CI file.
 - **Decision needed:** update doc 00's Makefile.
 
 ## F-05 Redaction key list has no owner text
@@ -110,9 +112,28 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 ## F-18 Files that cannot cite rule IDs
 The brief says every generated file cites the rule IDs it implements. Three kinds cannot carry a comment: `.claude/settings.json` (AGT-016 requires strict JSON), `.python-version` (a bare version, TEC-004), and generated files (`uv.lock`, `docs/api/openapi.yaml`, `.copier-answers.yml` carries a provenance comment only). Their rules: `settings.json` implements AGT-016..AGT-019 and AGT-021; `.python-version` implements TEC-001 and TEC-004; `uv.lock` implements TEC-005; `docs/api/openapi.yaml` implements API-001 and API-002. Every other template file carries a citation (checked by script against `rules.yml`: all cited IDs exist and none is retired).
 
-## Cold-read of the README routing row "Start a new service from scratch" (09, 00, 03, 01, 24, 16, 06, 07, 08)
-Done from the template builder's seat. Doc 01 was **not** read for this build (it is in the row but not in the brief's list), so its rules are unchecked.
+## F-19 Contradictions found by the independent cold-read
+A fresh subagent read only the routing row's docs (README row, then 09, 00, 03, 01, 24, 16, 06, 07, 08) and listed what blocks a newcomer. It had no access to my notes. Items already covered above are not repeated (F-01, F-02, F-04, F-07, F-09, F-10, F-11, F-13). The rest, with what the template did:
 
-- **Contradictions:** F-02 (pytest/`make test`), F-03 (`--disable-socket`), F-04 (`lint-imports` placement), F-07 (ARC-016 vs STR-005), F-09 (digest pinning vs matrix), F-06 (`trace_id`).
-- **Undecided points:** web framework (F-01); test client (F-13); redaction key list (F-05); auth pattern (F-17); service tier and coverage floor (F17); GitLab tier and CODEOWNERS enforcement (F4); Terraform final (F3); whether `domain/` may import pydantic (F14); Claude Code approval (F16).
-- **Missing steps:** no step says how to create the `uv.lock` or generate `docs/api/openapi.yaml` (the template does both in `_tasks`); no `AGENTS.md` content (F-11); no runbook template location for README's required runbook link (STR-004, doc 18 owns it; README has a `TODO:`); the order "git init, then `check_ignore.sh`" is implicit (the script needs a git work tree).
+| # | Contradiction | Template choice |
+|---|---|---|
+| 1 | PRC-011 (01): new services MUST come from the org Copier template, hand copying is forbidden (VERIFY: Copier). Docs 00, 07, 09 and README say the template is future work and tell you to copy from the docs. | This template is the Copier template; PRC-011's `VERIFY:` on Copier still stands. |
+| 2 | TEC-010: CI runs `make check`. CIC-001 and the doc 16 skeleton run the targets separately and omit `registry-check` and the 3.14/3.15 matrix (TEC-002). | CI runs `make check` on both minors (F-09). |
+| 3 | PRC-014 lists 12 standard targets; TEC-009 lists 14 (adds `fmt-check`, `registry-check`). | All 14. |
+| 4 | Doc 09's ADR headings ("MADR minimal", STR-025) differ from doc 03's template (ARC-030, which has `Confirmation` that ARC-033 needs). | Doc 03's template. |
+| 5 | The doc 01 command table lets agents run `git commit`, `make build`, `make security`, `make run`; doc 08's settings make `git commit` and `make build` `ask`, and the allow list omits `make security`, `make run` and `make fmt-check`. | Doc 08's `settings.json` verbatim (it is the tested one). |
+| 6 | PRC-032 [MUST] requires an agent trailer on commits; STR-032 [SHOULD] says the format is undecided (F5). | The commits in this repo carry the `Co-Authored-By` trailer; the template adds nothing. |
+| 7 | `thresholds.yaml` is `evals/thresholds.yaml` (09 tree, 07) or `evals/<suite>/thresholds.yaml` (PRC-026, 09 CODEOWNERS, README note). | CODEOWNERS uses `evals/**/thresholds.yaml`; no thresholds file ships. |
+| 8 | PRC-026 and CIC-010 protect `Makefile`, `Dockerfile`, lint/type/import config and `evals/`; doc 09's CODEOWNERS example omits them, and omits the architecture owner ARC-019 requires. | Added all of them to `CODEOWNERS`. |
+| 9 | STR-008 says `domain/` imports nothing from other layers; doc 03's layer map and contract allow `common/` (ASSUMPTION). | Contract unchanged; the `domain-pure` list does not ban `common`. |
+| 10 | TEC-016 says config lives in `pyproject.toml`, but import-linter config is `.importlinter` (doc 00 note; doc 03 says `pyproject.toml` support is unverified). | `.importlinter` file. |
+| 11 | Doc 08's `llm-and-agents.md` path glob (`src/*/ai/**`) differs from doc 09's tree (`src/**/agents/**`). | Rule not shipped (F-15). |
+
+Undecided points the reader could not resolve (all still open): runtime and hosting platform (SCR-007/012/030 branch on it); database, queue and ASGI server choices; F3, F4, F9, F10, F14, F15; service risk tier and coverage floor (F17) versus doc 00's `fail_under = 80` default and TST-026; image signing, SBOM, SAST, IaC scanner, image builder, approved registry; whether Claude Code is approved (F16); rotation period, privileged elevation and Key Vault settings (SCR-008, SCR-009, SCR-019); how a non-AI service trims `ai/`, `registry/`, `prompts/`, `evals/` (STR-001 requires an ADR to drop a standard directory).
+
+Missing steps the reader listed, and what the template covers: bootstrap (`uv lock`, renaming placeholders, `.python-version`) and source skeletons (`main.py`, `observability.py`, `api/*`, ports, errors, health endpoint), `tests/conftest.py` Hypothesis profiles, the integration, contract and eval smoke tests, the missing dev dependencies, and a `docs/api/openapi.yaml` are all generated. Still missing from the standards: `scripts/registry_check.py`, `scripts/deploy.sh`, `scripts/mutation_gate.py` as files; `security.md`, `api-contracts.md` and the `code-reviewer` subagent have no text; three of the four starter skills; a runbook template; manual GitLab and Azure setup steps (branch protection, protected environments, squash template, Key Vault, federated credentials, the Terraform state bootstrap); a `Dockerfile.context-check` CI job; SBOM, scan, sign, `tf-apply`, scheduled-job and `.dockerignore` content jobs in the doc 16 skeleton (TODOs in the CI file).
+
+Reader's lint trap, checked: doc 08's `# noqa: TRY004` in `check_agent_config.py` is unused under doc 00's rule set (RUF100); the template removed it (F-12). PRC-023 also forbids agents from adding `noqa` or per-file ignores; the template's `scripts/**` ignore is therefore a human-reviewed template decision, not something an agent should copy elsewhere.
+
+## Cold-read status
+The independent pass above is the cold-read of the row "Start a new service from scratch". It was a single fresh subagent read; I did not re-run it after the template fixes.
