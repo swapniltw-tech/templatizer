@@ -22,6 +22,7 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 | F-14 | 08 | open | Settings-schema validation of `.claude/settings.json` is not wired |
 | F-15 | 08, 09 | worked around | Which `.claude/` files the template ships |
 | F-16 | PLAN, README | open | Stale rule count in PLAN.md |
+| F-17 | 02, 17, 24 | open | No authentication pattern for the example endpoint |
 
 ## F-01 No web framework is named
 - **Docs:** 00 (reference stack), 03 (contracts forbid `fastapi` in `domain/`), 17 (OpenAPI, pydantic models, problem details).
@@ -99,3 +100,7 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 
 ## F-16 Stale rule count
 - `PLAN.md` says 820 rules; `check_docs.py` reports 821 and the new `rules.yml` export contains 821 (3 retired).
+
+## F-17 No authentication pattern for the example endpoint
+- **Docs:** API-007 (every operation declares its auth scheme; none is public by default), TST-046 (every endpoint that enforces authorization needs a deny-path test). The docs I used (00, 03, 06, 07, 08, 09, 10, 16, 24) do not define the org's authn/authz mechanism; doc 02 owns it and was out of this task's reading list.
+- **Done:** the reference service's premium-estimate operation is declared public (`security: []`) with a `TODO:`; no authorization is enforced, so TST-046 does not yet apply. Do not copy this endpoint into a real service without adding auth.
