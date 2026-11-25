@@ -2,7 +2,8 @@
 """Validate committed Claude Code configuration. Exit 1 on any problem.
 
 Implements AGT-001, AGT-010, AGT-011, AGT-014, AGT-016 (optional --schema), AGT-017/AGT-021 (broad
-allow rules and bypass default), AGT-018 (.env denies), AGT-028 (.mcp.json entries have a type).
+allow rules and bypass default), AGT-018 (.env denies), AGT-028 (.mcp.json entries have a type), and the GitLab Duo files under
+.gitlab/duo/ (chat rules non-empty; review instructions match the documented schema).
 
 Usage: scripts/check_agent_config.py [repo-dir] [--schema settings.schema.json]
 Needs PyYAML; jsonschema is only needed with --schema.
@@ -32,6 +33,40 @@ def frontmatter(path: Path) -> dict[str, Any] | None:
         msg = "frontmatter is not a mapping"
         raise ValueError(msg)
     return data
+
+
+def check_duo(root: Path) -> list[str]:
+    """Duo review instructions: documented keys only, unique names (the GitLab linter's checks)."""
+    duo = root / ".gitlab" / "duo"
+    errors: list[str] = []
+    chat = duo / "chat-rules.md"
+    if chat.exists() and not chat.read_text(encoding="utf-8").strip():
+        errors.append(f"{chat}: is empty")
+    review = duo / "mr-review-instructions.yaml"
+    if not review.exists():
+        return errors
+    try:
+        data = yaml.safe_load(review.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        return [*errors, f"{review}: does not parse ({exc})"]
+    groups = data.get("instructions") if isinstance(data, dict) else None
+    if not isinstance(groups, list) or not groups or set(data) != {"instructions"}:
+        return [*errors, f"{review}: needs a top-level 'instructions' list and nothing else"]
+    names: list[str] = []
+    for i, group in enumerate(groups):
+        where = f"{review}: group {i + 1}"
+        if not isinstance(group, dict) or set(group) - {"name", "instructions", "fileFilters"}:
+            errors.append(f"{where}: only name, instructions and fileFilters are allowed")
+            continue
+        for key in ("name", "instructions"):
+            if not isinstance(group.get(key), str) or not group[key].strip():
+                errors.append(f"{where}: '{key}' must be a non-empty string")
+        filters = group.get("fileFilters", [])
+        if not isinstance(filters, list) or not all(isinstance(f, str) for f in filters):
+            errors.append(f"{where}: fileFilters must be a list of strings")
+        names.append(str(group.get("name")))
+    errors += [f"{review}: duplicate name {n}" for n in sorted({n for n in names if names.count(n) > 1})]
+    return errors
 
 
 def check(root: Path, schema: Path | None) -> list[str]:
@@ -74,6 +109,7 @@ def check(root: Path, schema: Path | None) -> list[str]:
             valid = isinstance(paths, list) and all(isinstance(p, str) for p in paths)
             if set(fm) - {"paths"} or not valid:
                 errors.append(f"{path}: frontmatter must be only a 'paths' list of strings")
+    errors += check_duo(root)
     skills = sorted((root / ".claude").glob("skills/*/SKILL.md"))
     agents = sorted((root / ".claude").glob("agents/*.md"))
     for path in [*skills, *agents]:

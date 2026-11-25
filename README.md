@@ -5,7 +5,7 @@ Templates that implement the engineering standards in `docs/engineering-principl
 | Path | What |
 |---|---|
 | `templates/ai-python-template/` | Copier template for a Python service (src layout, Makefile, CI, import contracts, agent config) |
-| `tools/gen_agent_rules.py` | Generates the `.claude/rules/*.md` files (security, clean-code, api-contracts, architecture, domain-code, observability) from `rules.yml`; run it after the docs or the selection change, `--check` fails when outputs are stale |
+| `tools/gen_agent_rules.py` | Generates the `.claude/rules/*.md` files (security, clean-code, api-contracts, architecture, domain-code, observability) and the GitLab Duo files `.gitlab/duo/chat-rules.md` and `mr-review-instructions.yaml` from `rules.yml`; run it after the docs or the selection change, `--check` fails when outputs are stale |
 | `tools/check_rule_citations.py` | Fails when a file in the template cites an unknown or retired rule ID or none at all; checks against the root `rules.yml` |
 | `docs/engineering-principles/` | The engineering standards (principles) the template is built on; start at its `README.md` |
 | `scripts/check_docs.py` | Checks the standards docs against their conventions; `--export` writes `rules.yml` |

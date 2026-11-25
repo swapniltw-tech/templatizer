@@ -1,6 +1,8 @@
 {
   "_comment": "Selection of rules that become .claude/rules files in the service template. Only review/manual/runtime rules may be listed: anything tagged ci, lint or test already fails the build. `notes` are template-specific hints that do not come from rules.yml.",
   "output_dir": "templates/ai-python-template/template/.claude/rules",
+  "duo_dir": "templates/ai-python-template/template/.gitlab/duo",
+  "copied": ["python-style", "testing"],
   "files": [
     {
       "name": "security",

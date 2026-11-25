@@ -11,3 +11,7 @@ is approved developer tooling; do not use it on repos holding restricted data un
 - Permissions and hooks are in `.claude/settings.json`. Deny rules are guardrails, not a security boundary; CI is the control.
 - After editing any file under `.claude/`, run `claude doctor` and confirm there is no "Invalid settings" section, then `/status`.
 - Do not widen your own permissions or edit `.claude/settings.json` to unblock a task; ask a human.
+
+## GitLab Duo
+
+- Duo reads `AGENTS.md` (Chat and flows, not Code Review Flow). `.gitlab/duo/chat-rules.md` and `.gitlab/duo/mr-review-instructions.yaml` are generated from the same rule selection as `.claude/rules/`; never edit them by hand (AGT-004).
