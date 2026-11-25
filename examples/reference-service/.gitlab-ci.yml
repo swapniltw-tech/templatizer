@@ -1,8 +1,8 @@
 # Implements: CIC-001 (runs make targets, pipeline must pass to merge), CIC-002 (MR + default branch),
 # CIC-003 (eval on AI/eval changes), CIC-004 (scanners), CIC-007 (pinned images), CIC-008 (timeout,
 # interruptible), TEC-002/TEC-010 (make check on two Python minors), TST-048/TST-049 (blocking tests,
-# JUnit + Cobertura artifacts), IGN-016, AGT-001/AGT-010/AGT-014/AGT-016/AGT-018/AGT-031 (agent-config
-# check), STR-027/STR-028 (commit subjects). Skeleton: doc 16; test job: doc 24.
+# JUnit + Cobertura artifacts), IGN-016 and AGT-001/AGT-010/AGT-014/AGT-016/AGT-018/AGT-031 (run inside make lint, PRC-015),
+# STR-027/STR-028 (commit subjects). Skeleton: doc 16; test job: doc 24.
 #
 # Keywords below were checked against docs.gitlab.com on 2026-11-25 (junit list, coverage_report,
 # coverage regex, include templates, merge request variable). NOT VERIFIED: the file was not run in
@@ -70,8 +70,9 @@ check-py315:
   variables:
     PYTHON_MINOR: "3.15"
 
-# IGN-016, AGT-001.., STR-027/028: repository hygiene checks.
-repo-hygiene:
+# STR-027/028: commit subjects (needs a git range, so CI only; every other repo check runs in make check,
+# PRC-015). TODO: a local equivalent, for example `python scripts/check_commit_msg.py origin/main..HEAD`.
+commit-subjects:
   extends: .uv-job
   stage: validate
   image: <approved-registry>/python-uv@sha256:<digest-3.14>
@@ -79,8 +80,6 @@ repo-hygiene:
     PYTHON_MINOR: "3.14"
     GIT_DEPTH: "0"  # full history so the commit range below resolves
   script:
-    - scripts/check_ignore.sh
-    - uv run --locked python scripts/check_agent_config.py .
     - uv run --locked python scripts/check_commit_msg.py "$CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD"
   rules:
     # CI_MERGE_REQUEST_DIFF_BASE_SHA exists in merge request pipelines only (docs.gitlab.com, 2026-11-25).

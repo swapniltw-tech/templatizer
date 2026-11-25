@@ -1,6 +1,7 @@
 # Standard Makefile (docs/00-tech-stack.md). Implements TEC-009 (all standard targets),
 # TEC-010 (check = what CI runs), TEC-012 (no hidden failures), ARC-015 (lint-imports in lint),
-# TST-001 (test = unit + integration). Test targets follow doc 24 where it differs from doc 00.
+# TST-001 (test = unit + integration), PRC-015 (no check exists only in CI: ignore-file and agent-config
+# checks run in lint; scripts/check_ignore.sh needs a git work tree, so run `git init` first). Test targets follow doc 24 where it differs from doc 00.
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := help
@@ -26,9 +27,11 @@ fmt: ## Format and apply safe lint fixes
 fmt-check: ## Verify formatting (no changes)
 	$(RUN) ruff format --check .
 
-lint: ## Ruff, then architecture contracts (ARC-015)
+lint: ## Ruff, architecture contracts (ARC-015), ignore-file and agent-config checks (PRC-015, IGN-016, AGT-001)
 	$(RUN) ruff check .
 	$(RUN) lint-imports
+	scripts/check_ignore.sh
+	$(RUN) python scripts/check_agent_config.py .
 
 typecheck: ## mypy strict
 	$(RUN) mypy
