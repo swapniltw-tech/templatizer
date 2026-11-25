@@ -23,6 +23,7 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 | F-15 | 08, 09 | worked around | Which `.claude/` files the template ships |
 | F-16 | PLAN, README | open | Stale rule count in PLAN.md |
 | F-17 | 02, 17, 24 | open | No authentication pattern for the example endpoint |
+| F-18 | 08, brief | worked around | Files that cannot cite rule IDs |
 
 ## F-01 No web framework is named
 - **Docs:** 00 (reference stack), 03 (contracts forbid `fastapi` in `domain/`), 17 (OpenAPI, pydantic models, problem details).
@@ -68,9 +69,10 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 - **Decision needed:** confirm that platform probes are exempt, or define how they authenticate.
 
 ## F-09 Digest pinning vs the Python-minor matrix
-- **Docs:** CIC-007 requires job images pinned by digest or immutable tag; TEC-002 requires `make check` on the two newest minors; TEC-004 says `.python-version`, Dockerfile and CI name the same minor (the matrix necessarily names two).
-- **Done:** one placeholder digest per minor in a `parallel: matrix`; TEC-004 is read as "the default minor" (`3.14`).
-- **Not verified:** the CI file was not linted with GitLab's CI lint or run (no GitLab access). `variables`-in-`image`, the matrix shape, the `junit` list form, `CI_MERGE_REQUEST_DIFF_BASE_SHA` and the coverage regex are `VERIFY:`.
+- **Docs:** CIC-007 requires job images pinned by digest or immutable tag; TEC-002 requires `make check` on the two newest minors; TEC-004 says `.python-version`, Dockerfile and CI name the same minor (two CI minors cannot all match).
+- **Done:** two explicit jobs (`check-py314`, `check-py315`), each with its own placeholder digest. `parallel: matrix` with a variable in `image:` was left out: docs.gitlab.com does not confirm matrix variables there. TEC-004 is read as "the default minor" (`3.14`).
+- **Not verified:** the CI file was not linted with GitLab's CI lint or run (no GitLab access). Checked against docs.gitlab.com on 2026-11-25: `junit` accepts a list, `coverage_report` syntax, the `coverage:` regex form, `CI_MERGE_REQUEST_DIFF_BASE_SHA` (merge request pipelines only).
+- **Related (doc 16 is outdated):** it names the templates `Security/SAST.gitlab-ci.yml` and `Security/Secret-Detection.gitlab-ci.yml`; docs.gitlab.com now shows `Jobs/SAST.gitlab-ci.yml` and `Jobs/Secret-Detection.gitlab-ci.yml`, available in Free, Premium and Ultimate (MR widgets need Ultimate). The template uses the `Jobs/` paths.
 
 ## F-10 Dockerfile placeholders fail the build by design
 - **Docs:** doc 00 ships `REPLACE_WITH_DIGEST` so the build fails until real digests are set; the brief expects `docker build` to succeed.
@@ -104,6 +106,9 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 ## F-17 No authentication pattern for the example endpoint
 - **Docs:** API-007 (every operation declares its auth scheme; none is public by default), TST-046 (every endpoint that enforces authorization needs a deny-path test). The docs I used (00, 03, 06, 07, 08, 09, 10, 16, 24) do not define the org's authn/authz mechanism; doc 02 owns it and was out of this task's reading list.
 - **Done:** the reference service's premium-estimate operation is declared public (`security: []`) with a `TODO:`; no authorization is enforced, so TST-046 does not yet apply. Do not copy this endpoint into a real service without adding auth.
+
+## F-18 Files that cannot cite rule IDs
+The brief says every generated file cites the rule IDs it implements. Three kinds cannot carry a comment: `.claude/settings.json` (AGT-016 requires strict JSON), `.python-version` (a bare version, TEC-004), and generated files (`uv.lock`, `docs/api/openapi.yaml`, `.copier-answers.yml` carries a provenance comment only). Their rules: `settings.json` implements AGT-016..AGT-019 and AGT-021; `.python-version` implements TEC-001 and TEC-004; `uv.lock` implements TEC-005; `docs/api/openapi.yaml` implements API-001 and API-002. Every other template file carries a citation (checked by script against `rules.yml`: all cited IDs exist and none is retired).
 
 ## Cold-read of the README routing row "Start a new service from scratch" (09, 00, 03, 01, 24, 16, 06, 07, 08)
 Done from the template builder's seat. Doc 01 was **not** read for this build (it is in the row but not in the brief's list), so its rules are unchecked.
