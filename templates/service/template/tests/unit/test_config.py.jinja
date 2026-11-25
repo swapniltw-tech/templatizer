@@ -1,0 +1,47 @@
+"""Settings behaviour (SCR-011, SCR-012, TST-013: no real environment leaks into tests)."""
+
+import os
+from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
+
+from {{ package_name }}.config import Settings
+
+
+@pytest.fixture(autouse=True)
+def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in [n for n in os.environ if n.startswith("APP_")]:
+        monkeypatch.delenv(name)
+
+
+def test_defaults_are_valid_for_local() -> None:
+    settings = Settings(_env_file=None)
+    assert settings.environment == "local"
+    assert settings.host == "127.0.0.1"
+    assert settings.key_vault_url is None
+
+
+def test_non_local_environment_requires_key_vault_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENVIRONMENT", "prod")
+    with pytest.raises(ValidationError, match="APP_KEY_VAULT_URL"):
+        Settings(_env_file=None)
+
+
+def test_non_local_environment_accepts_key_vault_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENVIRONMENT", "prod")
+    monkeypatch.setenv("APP_KEY_VAULT_URL", "https://example-vault.vault.azure.net")
+    assert Settings(_env_file=None).environment == "prod"
+
+
+def test_invalid_log_level_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_LOG_LEVEL", "LOUD")
+    with pytest.raises(ValidationError, match="log_level"):
+        Settings(_env_file=None)
+
+
+def test_unknown_key_in_env_file_is_rejected(tmp_path: Path) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("APP_NOPE=1\n", encoding="utf-8")
+    with pytest.raises(ValidationError):
+        Settings(_env_file=env_file)

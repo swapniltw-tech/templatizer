@@ -1,0 +1,57 @@
+# Copier template for a Python service (docs 00, 03, 06, 07, 08, 09, 10, 16, 24).
+# Usage: copier copy --trust templates/service <destination>
+#   (--trust is needed because the template runs `uv lock` after generation, see _tasks.)
+_min_copier_version: "9.0.0"
+_subdirectory: template
+_templates_suffix: .jinja
+_message_after_copy: |
+  Generated {{ service_name }}. Next: cd {{ _copier_conf.dst_path }} && git init && make install && make check
+  Then read the TODO and ASSUMPTION/VERIFY markers: grep -rn "TODO\|ASSUMPTION:\|VERIFY:" .
+_tasks:
+  # TEC-005: uv.lock is committed; generate it so `make install` (uv sync --locked) works.
+  - command: uv lock
+    working_directory: "{{ _copier_conf.dst_path }}"
+  # API-001: docs/api/openapi.yaml is generated from the app and then reviewed as the contract.
+  - command: uv run --locked python scripts/export_openapi.py
+    working_directory: "{{ _copier_conf.dst_path }}"
+
+service_name:
+  type: str
+  help: Service name in lowercase kebab-case (STR-017)
+  default: my-service
+  validator: "{% if not (service_name | regex_search('^[a-z][a-z0-9]*(-[a-z0-9]+)*$')) %}Use lowercase kebab-case, for example claims-intake{% endif %}"
+
+package_name:
+  type: str
+  help: Importable Python package under src/ (STR-002, STR-016)
+  default: "{{ service_name | replace('-', '_') }}"
+  validator: "{% if not (package_name | regex_search('^[a-z][a-z0-9_]*$')) %}Use snake_case{% endif %}"
+
+description:
+  type: str
+  help: One sentence - what the service does and for whom (STR-004, AGT-002)
+  default: Example service generated from the engineering-standards template.
+
+platform_group:
+  type: str
+  help: GitLab group that owns the repo by default (STR-034; groups, never individuals). Placeholder until real groups exist.
+  default: example-org/platform-team
+
+security_group:
+  type: str
+  help: GitLab group that co-owns security-sensitive paths (STR-036)
+  default: example-org/security-team
+
+service_tier:
+  type: str
+  help: "ASSUMPTION (F17): service tier A, B or C sets the coverage floor (doc 24 'Service tiers and floors': 90, 85, 80)"
+  choices:
+    - C
+    - B
+    - A
+  default: C
+
+coverage_floor:
+  type: int
+  when: false
+  default: "{{ {'A': 90, 'B': 85, 'C': 80}[service_tier] }}"

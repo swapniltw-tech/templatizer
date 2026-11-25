@@ -1,0 +1,128 @@
+# Architecture contracts. Implements ARC-002..ARC-009, ARC-015, ARC-016, ARC-019..ARC-022, STR-007.
+# Source: doc 03 "Fitness-test configuration" (run on a toy tree: 10 contracts kept; one injected
+# violation per contract broke the matching contract). Owned by the architecture owner in CODEOWNERS
+# (ARC-019): do not edit to make a build pass, and every ignore_imports entry needs an ADR or
+# waiver reference plus an expiry date (ARC-020).
+# ASSUMPTION (F14): `domain` may import pydantic. If forbidden, add `pydantic` to domain-pure.
+# ASSUMPTION (F15): no contract yet for application workflows importing `ai/`.
+[importlinter]
+root_package = {{ package_name }}
+include_external_packages = True
+
+[importlinter:contract:layers]
+name = Inbound layering: api -> application -> domain (ARC-003)
+type = layers
+layers =
+    {{ package_name }}.api
+    {{ package_name }}.application
+    {{ package_name }}.domain
+
+[importlinter:contract:domain-pure]
+name = Domain imports nothing outward and no I/O or framework or LLM libraries (ARC-002, STR-008)
+type = forbidden
+source_modules =
+    {{ package_name }}.domain
+forbidden_modules =
+    {{ package_name }}.api
+    {{ package_name }}.application
+    {{ package_name }}.adapters
+    {{ package_name }}.ai
+    {{ package_name }}.security
+    {{ package_name }}.config
+    {{ package_name }}.observability
+    {{ package_name }}.main
+    httpx
+    fastapi
+    openai
+    azure
+    sqlalchemy
+
+[importlinter:contract:api-no-adapters]
+name = API receives adapters by injection and never imports them (STR-009)
+type = forbidden
+source_modules =
+    {{ package_name }}.api
+forbidden_modules =
+    {{ package_name }}.adapters
+
+[importlinter:contract:application-no-io]
+name = Application depends on ports, never on adapters or api (ARC-003)
+type = forbidden
+source_modules =
+    {{ package_name }}.application
+forbidden_modules =
+    {{ package_name }}.adapters
+    {{ package_name }}.api
+
+[importlinter:contract:adapters-not-api]
+name = Adapters never import the transport layer, agents or tools (ARC-004)
+type = forbidden
+source_modules =
+    {{ package_name }}.adapters
+forbidden_modules =
+    {{ package_name }}.api
+    {{ package_name }}.ai.agents
+    {{ package_name }}.ai.tools
+
+[importlinter:contract:tools-no-adapters]
+name = AI tools call use cases, never adapters or api (ARC-005, STR-011)
+type = forbidden
+source_modules =
+    {{ package_name }}.ai.tools
+forbidden_modules =
+    {{ package_name }}.adapters
+    {{ package_name }}.api
+
+[importlinter:contract:agents-no-api]
+name = Agents never import api or non-LLM adapters (ARC-006, STR-011)
+type = forbidden
+source_modules =
+    {{ package_name }}.ai.agents
+forbidden_modules =
+    {{ package_name }}.api
+    {{ package_name }}.adapters.db
+    {{ package_name }}.adapters.http_clients
+    {{ package_name }}.adapters.queue
+    {{ package_name }}.adapters.storage
+    {{ package_name }}.adapters.keyvault
+
+[importlinter:contract:main-is-root]
+name = Only the entry point may import main (ARC-008)
+type = forbidden
+source_modules =
+    {{ package_name }}.api
+    {{ package_name }}.application
+    {{ package_name }}.domain
+    {{ package_name }}.adapters
+    {{ package_name }}.ai
+forbidden_modules =
+    {{ package_name }}.main
+
+[importlinter:contract:model-sdk-only-in-llm-adapter]
+name = Model SDKs are imported only by adapters.llm (ARC-007)
+type = forbidden
+source_modules =
+    {{ package_name }}.api
+    {{ package_name }}.application
+    {{ package_name }}.domain
+    {{ package_name }}.ai
+forbidden_modules =
+    azure
+    openai
+    httpx
+allow_indirect_imports = True
+
+[importlinter:contract:common-is-leaf]
+name = common imports nothing from the package (ARC-009)
+type = forbidden
+source_modules =
+    {{ package_name }}.common
+forbidden_modules =
+    {{ package_name }}.api
+    {{ package_name }}.application
+    {{ package_name }}.domain
+    {{ package_name }}.adapters
+    {{ package_name }}.ai
+    {{ package_name }}.security
+    {{ package_name }}.config
+    {{ package_name }}.observability

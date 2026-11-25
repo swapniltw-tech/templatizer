@@ -1,0 +1,120 @@
+# Implements: TEC-001 (python >=3.14), TEC-005/TEC-006/TEC-017 (uv, deps only here, bounded),
+# TEC-007/TEC-008 (Ruff only, mypy strict), TEC-013/TEC-016 (pytest + coverage in this file),
+# ARC-015 (import-linter), TST-005/008/010/011/012 (strict markers, no network, random order,
+# warnings fail, per-test timeout). Skeleton: doc 00; pytest/coverage block: doc 24.
+# Where docs 00 and 24 disagree, doc 24 owns tests (docs/FINDINGS.md F-02).
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]  # VERIFY: platform team accepts uv_build (doc 00 note)
+build-backend = "uv_build"
+
+[project]
+name = "{{ service_name }}"
+version = "0.1.0"
+description = "{{ description }}"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.115,<1",  # ASSUMPTION: framework choice pending ADR 0001 (docs/FINDINGS.md F-01)
+    "uvicorn>=0.32,<1",
+    "pydantic>=2.9,<3",
+    "pydantic-settings>=2.6,<3",
+    "structlog>=26,<27",
+    # OBS-013: opentelemetry-* are pinned together through uv.lock; upgrade them in one MR.
+    "opentelemetry-api>=1.45,<2",
+    "opentelemetry-sdk>=1.45,<2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17",
+    "mypy>=2.4",
+    "pytest>=9",
+    "pytest-cov>=6",
+    "pytest-socket>=0.7",
+    "pytest-randomly>=4",
+    "pytest-timeout>=2.4",
+    "hypothesis>=6.100",
+    "import-linter>=2",
+    "pip-audit>=2.7",
+    "httpx2>=2,<3",  # Starlette TestClient (httpx is deprecated there; VERIFY version bound)
+    "pyyaml>=6,<7",  # OpenAPI contract test and scripts/check_agent_config.py
+    "types-pyyaml",
+]
+
+[tool.uv]
+required-version = ">=0.13"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "N", "S", "C4", "C90", "SIM", "RUF", "PL", "PT",
+    "ANN", "ASYNC", "T20", "TID", "DTZ", "PERF", "ERA",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "ANN", "PLR2004"]  # S105/S106: fake secrets as test data
+"evals/**" = ["S101", "S105", "S106", "ANN", "PLR2004"]
+# Helper scripts are CLIs: printing is their job; check_agent_config.py (copied from doc 08) is long.
+# Never widen this to src/. (docs/FINDINGS.md F-12: the doc scripts needed formatting and these ignores.)
+"scripts/**" = ["T201", "C901", "PLR0912", "PLR2004"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["{{ package_name }}"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["src", "tests", "evals"]
+warn_unreachable = true
+explicit_package_bases = true
+mypy_path = "src"
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest]  # native TOML table needs pytest >= 9.0 (doc 24)
+minversion = "9.0"
+strict = true  # VERIFY: exact option set covered by `strict` (doc 24); strict markers are also explicit below
+testpaths = ["tests"]
+addopts = [
+    "-ra", "--import-mode=importlib", "--strict-markers", "--strict-config",
+    # --allow-unix-socket: asyncio (and so Starlette's TestClient) opens a local socketpair; INET
+    # sockets stay blocked (TST-008). Doc 24 shows --disable-socket alone (docs/FINDINGS.md F-03).
+    "--disable-socket", "--allow-unix-socket", "-m", "not live_llm and not e2e",
+]
+timeout = "30"  # native table expects a string for this option (doc 24)
+filterwarnings = ["error"]
+markers = [
+    "integration: needs real dependencies (containers or emulators)",
+    "contract: consumer or provider contract test",
+    "eval: model-quality evals, run by make eval",
+    "e2e: end-to-end test against a deployed environment",
+    "live_llm: calls a real model deployment; budgeted, never in make check",
+    "slow: takes more than one second",
+]
+
+[tool.coverage.run]
+source = ["{{ package_name }}"]
+branch = true
+relative_files = true
+omit = ["mutants/*"]
+
+[tool.coverage.report]
+# ASSUMPTION (F17): floor for service tier {{ service_tier }} (doc 24). Floors only ratchet up (TST-026).
+fail_under = {{ coverage_floor }}
+show_missing = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload", "if __name__ == .__main__.:"]
