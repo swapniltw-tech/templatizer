@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from reference_service.api.errors import install_error_handlers
 from reference_service.api.middleware import RequestIdMiddleware
-from reference_service.api.routers import health
+from reference_service.api.routers import health, premium_estimates
 from reference_service.config import Settings, get_settings
 from reference_service.observability import configure_logging
 
@@ -21,6 +21,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestIdMiddleware)
     install_error_handlers(app)
     app.include_router(health.router)
+    app.include_router(premium_estimates.router)
     return app
 
 
