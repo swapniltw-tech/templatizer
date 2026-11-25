@@ -1,5 +1,5 @@
 # CI for this template repository itself (not the generated services; their pipeline is
-# templates/service/template/.gitlab-ci.yml).
+# templates/ai-python-template/template/.gitlab-ci.yml).
 # Implements AGT-010/AGT-011 (rule files stay generated and within limits), CIC-001 (a root
 # .gitlab-ci.yml that must pass before merge), CIC-002 (merge request events and default branch),
 # CIC-007 (pinned job image), CIC-008 (timeout, interruptible).
@@ -8,8 +8,8 @@
 # ASSUMPTION: (F4) GitLab tier and runners. <approved-registry> and the digest are placeholders.
 # TODO: also run `copier copy` plus `make check` on the generated project in a job (needs uv and
 # network egress to the approved package index).
-# TODO: tools/rules.yml is a snapshot of `scripts/check_docs.py --export` from the standards repo;
-# refresh it when the docs change (it cannot be regenerated here because the docs live elsewhere).
+# rules.yml (repo root) is generated from docs/engineering-principles by `python3 -I scripts/check_docs.py --export`;
+# refresh it when the docs change.
 
 workflow:
   rules:
@@ -23,7 +23,7 @@ default:
 
 stages: [validate]
 
-# Rule files under .claude/rules must match what the generator writes from tools/rules.yml, and
+# Rule files under .claude/rules must match what the generator writes from rules.yml, and
 # every rule ID cited in the template and the example must exist and not be retired.
 rule-checks:
   stage: validate

@@ -1,5 +1,5 @@
 # Copier template for a Python service (docs 00, 03, 06, 07, 08, 09, 10, 16, 24).
-# Usage: copier copy --trust templates/service <destination>
+# Usage: copier copy --trust templates/ai-python-template <destination>
 #   (--trust is needed because the template runs `uv lock` after generation, see _tasks.)
 _min_copier_version: "9.0.0"
 _subdirectory: template

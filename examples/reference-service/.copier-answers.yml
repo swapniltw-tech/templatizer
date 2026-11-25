@@ -1,5 +1,5 @@
 # Template provenance for `copier update` (TEC-021: stack changes are recorded). Changes here will be overwritten by Copier; used by `copier update`. Commit this file.
-_src_path: ../../templates/service
+_src_path: ../../templates/ai-python-template
 description: 'Reference service generated from the template: one synthetic premium-estimate
     endpoint.'
 package_name: reference_service

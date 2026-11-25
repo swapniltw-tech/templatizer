@@ -2,7 +2,7 @@
 """Generate .claude/rules/*.md for the service template from rules.yml.
 
 Usage: python3 -I tools/gen_agent_rules.py [--rules PATH] [--spec PATH] [--check]
-  --rules  rules.yml written by `scripts/check_docs.py --export` (default tools/rules.yml)
+  --rules  rules.yml written by `scripts/check_docs.py --export` (default rules.yml at the repo root)
   --spec   selection file (default tools/agent_rules.json)
   --check  write nothing; exit 1 if any output file differs from what would be generated
 
@@ -83,7 +83,7 @@ def render(spec: dict[str, Any], rules: dict[str, dict[str, object]]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rules", type=Path, default=ROOT / "tools" / "rules.yml")
+    parser.add_argument("--rules", type=Path, default=ROOT / "rules.yml")
     parser.add_argument("--spec", type=Path, default=ROOT / "tools" / "agent_rules.json")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
