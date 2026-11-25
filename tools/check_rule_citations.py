@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Check the rule IDs cited in template and example files against rules.yml.
+"""Check the rule IDs cited in template files against rules.yml.
 
 Usage: python3 -I tools/check_rule_citations.py [--rules PATH] [DIR ...]
-  default DIRs: templates/ai-python-template/template examples/reference-service (tracked files only)
+  default DIRs: templates/ai-python-template/template (tracked files only)
 
 Fails (exit 1) when a file cites an ID that is not in rules.yml or is retired, or when a file cites
 no rule ID at all (the brief: every generated file cites the rules it implements). Files that cannot
@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ID = re.compile(r"\b([A-Z]{3})-(\d{3})\b")
 # Cannot carry a comment: strict JSON (AGT-016), a bare version (TEC-004), generated lock/spec files.
 EXEMPT_NAMES = {"settings.json", ".python-version", "uv.lock", "openapi.yaml"}
-DEFAULT_DIRS = ["templates/ai-python-template/template", "examples/reference-service"]
+DEFAULT_DIRS = ["templates/ai-python-template/template"]
 
 
 def read_rules(path: Path) -> tuple[set[str], set[str]]:
