@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that commit subjects follow Conventional Commits 1.0.0.
+"""Check that commit subjects follow Conventional Commits 1.0.0 (STR-027, STR-028).
 
 Usage: scripts/check_commit_msg.py <git-rev-range>   e.g. origin/main..HEAD
 Reads subjects with `git log --format=%s`. Merge commits and fixup commits are rejected.

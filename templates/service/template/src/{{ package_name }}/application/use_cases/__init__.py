@@ -1,1 +1,1 @@
-"""Use cases: orchestrate domain and ports."""
+"""Use cases: orchestrate domain and ports (ARC-003, ARC-011)."""

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Implements IGN-002..IGN-010 and IGN-016 (verifies ignore rules), AGT-031 (personal agent files ignored).
 # Usage: scripts/check_ignore.sh [repo-dir]   (run from inside a git work tree)
 set -eu
 cd "${1:-.}"

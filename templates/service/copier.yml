@@ -44,7 +44,7 @@ security_group:
 
 service_tier:
   type: str
-  help: "ASSUMPTION (F17): service tier A, B or C sets the coverage floor (doc 24 'Service tiers and floors': 90, 85, 80)"
+  help: "ASSUMPTION: (F17) service tier A, B or C sets the coverage floor (doc 24 'Service tiers and floors': 90, 85, 80)"
   choices:
     - C
     - B

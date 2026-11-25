@@ -1,4 +1,4 @@
-"""Typed domain errors (python-style rule: never return error strings)."""
+"""Typed domain errors (API-012 stable codes; ARC-013 mapped in api/errors.py)."""
 
 
 class DomainError(Exception):

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Implements AGT-018 (protect .env*, uv.lock, state files), AGT-024 (script under .claude/hooks),
+# AGT-025 (fails closed: exit 2 when input is unreadable), AGT-026 (guardrail; CI is the control).
 # PreToolUse hook (Edit|Write): block edits to files that agents must never change by hand.
 # Fails closed: if jq is missing or the input is unreadable, the edit is blocked.
 set -u

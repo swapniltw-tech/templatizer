@@ -2,7 +2,7 @@
 
 <!-- Implements AGT-001 (committed, <= 200 lines), AGT-006 (@AGENTS.md first line, Claude-specific
 content only below), AGT-004 (no restated standards). VERIFY: run /context and confirm the
-AGENTS.md content loads (doc 08 checked this against the docs only). ASSUMPTION (F16): Claude Code
+AGENTS.md content loads (doc 08 checked this against the docs only). ASSUMPTION: (F16) Claude Code
 is approved developer tooling; do not use it on repos holding restricted data until confirmed. -->
 
 ## Claude Code specifics

@@ -4,10 +4,13 @@
 # JUnit + Cobertura artifacts), IGN-016, AGT-001/AGT-010/AGT-014/AGT-016/AGT-018/AGT-031 (agent-config
 # check), STR-027/STR-028 (commit subjects). Skeleton: doc 16; test job: doc 24.
 #
-# NOT VERIFIED: this file was not run in GitLab and not linted with GitLab's CI lint.
-# ASSUMPTION (F4): GitLab tier and runners. Everything in <angle brackets> is a placeholder.
-# ASSUMPTION: the job images below already contain uv, make and git (no approved image exists yet).
-# TODO: build/scan/sign/SBOM jobs (DEP-024, CIC-031), deploy jobs and Terraform jobs (CIC-021..CIC-029).
+# Keywords below were checked against docs.gitlab.com on 2026-11-25 (junit list, coverage_report,
+# coverage regex, include templates, merge request variable). NOT VERIFIED: the file was not run in
+# GitLab and not linted with GitLab's CI lint (no instance access).
+# ASSUMPTION: (F4) GitLab tier and runners. Everything in <angle brackets> is a placeholder.
+# ASSUMPTION: (F4) the job images below already contain uv, make and git (no approved image exists yet).
+# TODO: image-content check (IGN-015), SBOM/scan/sign (DEP-024, CIC-031), deploy and Terraform jobs
+# (CIC-021..CIC-029), scheduled mutation/e2e/performance jobs (TST-050), central pinned include (CIC-006).
 
 workflow:
   rules:
@@ -22,11 +25,13 @@ default:
 stages: [validate, test, eval, security, build]
 
 include:
-  # VERIFY: template paths and licence tier (doc 16). If unavailable, run the open-source scanners.
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Security/Secret-Detection.gitlab-ci.yml
+  # Template paths per docs.gitlab.com (checked 2026-11-25): both run in Free, Premium and Ultimate;
+  # MR widgets and vulnerability reports need Ultimate. Doc 16's `Security/...` paths are outdated.
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
 
 variables:
+  HYPOTHESIS_PROFILE: gate  # TST-024: derandomized property tests in CI (profile defined in tests/conftest.py)
   UV_PYTHON_DOWNLOADS: "0"  # use the interpreter in the job image so the matrix minor is the one tested
 
 .uv-job:
@@ -35,29 +40,35 @@ variables:
     - export UV_PYTHON="$PYTHON_MINOR"
     - make install
 
-# TEC-002/TEC-010: the same `make check` developers run, on the two newest minors.
-# CIC-007 vs the matrix: one digest per minor (docs/FINDINGS.md F-09).
-check:
+# TEC-002/TEC-010: the same `make check` developers run, on the two newest minors, as two explicit
+# jobs (one digest per minor satisfies CIC-007; docs/FINDINGS.md F-09). A `parallel: matrix` with a
+# variable in `image:` was left out because docs.gitlab.com does not confirm matrix variables there.
+.check:
   extends: .uv-job
   stage: test
-  image: $PYTHON_IMAGE
-  parallel:
-    matrix:
-      - PYTHON_MINOR: ["3.14"]
-        PYTHON_IMAGE: ["<approved-registry>/python-uv@sha256:<digest-3.14>"]
-      - PYTHON_MINOR: ["3.15"]
-        PYTHON_IMAGE: ["<approved-registry>/python-uv@sha256:<digest-3.15>"]
   script:
     - make check
-  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'  # VERIFY: regex against the actual log format (doc 24)
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'  # matches the pytest-cov TOTAL line of this template
   artifacts:
     when: always
     reports:
-      junit: [reports/unit.xml, reports/integration.xml]  # VERIFY: junit key and list form (doc 24)
+      junit: [reports/unit.xml, reports/integration.xml]
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
   allow_failure: false
+
+check-py314:
+  extends: .check
+  image: <approved-registry>/python-uv@sha256:<digest-3.14>
+  variables:
+    PYTHON_MINOR: "3.14"
+
+check-py315:
+  extends: .check
+  image: <approved-registry>/python-uv@sha256:<digest-3.15>
+  variables:
+    PYTHON_MINOR: "3.15"
 
 # IGN-016, AGT-001.., STR-027/028: repository hygiene checks.
 repo-hygiene:
@@ -72,7 +83,7 @@ repo-hygiene:
     - uv run --locked python scripts/check_agent_config.py .
     - uv run --locked python scripts/check_commit_msg.py "$CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD"
   rules:
-    # VERIFY: CI_MERGE_REQUEST_DIFF_BASE_SHA name and availability for MR pipelines (doc 09).
+    # CI_MERGE_REQUEST_DIFF_BASE_SHA exists in merge request pipelines only (docs.gitlab.com, 2026-11-25).
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 # CIC-003: model-quality evals when eval or AI code changes. Synthetic datasets only.
@@ -98,12 +109,12 @@ dependency-audit:
     - make security
   allow_failure: false
 
-# Build only on the default branch (doc 16). Builder choice (kaniko, buildah, ...) is VERIFY: open.
+# Build only on the default branch (doc 16). TODO: choose the image builder (kaniko, buildah, ...).
 build-image:
   stage: build
   image: <approved-registry>/image-builder@sha256:<digest>
   script:
     - make build
-    # TODO: SBOM, image scan, sign (CIC-031, DEP-024); VERIFY: tools.
+    # TODO: SBOM, image scan, sign (CIC-031, DEP-024); tools undecided.
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

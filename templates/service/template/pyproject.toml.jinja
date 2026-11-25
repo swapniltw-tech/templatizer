@@ -10,7 +10,7 @@ build-backend = "uv_build"
 [project]
 name = "{{ service_name }}"
 version = "0.1.0"
-description = "{{ description }}"
+description = {{ description | tojson }}
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -114,7 +114,7 @@ relative_files = true
 omit = ["mutants/*"]
 
 [tool.coverage.report]
-# ASSUMPTION (F17): floor for service tier {{ service_tier }} (doc 24). Floors only ratchet up (TST-026).
+# ASSUMPTION: (F17) floor for service tier {{ service_tier }} (doc 24). Floors only ratchet up (TST-026).
 fail_under = {{ coverage_floor }}
 show_missing = true
 exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload", "if __name__ == .__main__.:"]

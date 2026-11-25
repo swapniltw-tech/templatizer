@@ -1,3 +1,4 @@
+# Implements IGN-013 (deny by default, allow-list only what the Dockerfile copies), IGN-015, SCR-017.
 # Deny by default. Only the paths allow-listed below may enter the build context.
 *
 
