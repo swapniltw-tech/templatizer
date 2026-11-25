@@ -7,6 +7,8 @@ Templates that implement the engineering standards in `canada-life/docs/` (draft
 | `templates/service/` | Copier template for a Python service (src layout, Makefile, CI, import contracts, agent config) |
 | `examples/reference-service/` | A service generated from the template, plus one business endpoint |
 | `tools/gen_agent_rules.py` | Generates the `.claude/rules/*.md` files (security, clean-code, api-contracts, architecture, domain-code, observability) from `rules.yml`; run it after the docs or the selection change, `--check` fails when outputs are stale |
+| `tools/check_rule_citations.py`, `tools/rules.yml` | Fails when a file in the template or example cites an unknown or retired rule ID or none at all; `rules.yml` is a snapshot of the standards export |
+| `.gitlab-ci.yml` | This repo's CI: runs the generator `--check` and the citation check |
 | `docs/FINDINGS.md` | Contradictions and gaps found in the standards while building (read this first) |
 
 ## Use
@@ -21,9 +23,11 @@ cd <destination> && git init && make install && make check
 ## Regenerate agent rule files
 
 ```bash
-# rules.yml comes from: python3 -I scripts/check_docs.py --export  (in the standards repo)
-python3 -I tools/gen_agent_rules.py --rules <path>/rules.yml          # write
-python3 -I tools/gen_agent_rules.py --rules <path>/rules.yml --check  # exit 1 if stale
+# rules.yml comes from: python3 -I scripts/check_docs.py --export  (in the standards repo); the CI reads the snapshot tools/rules.yml
+cp <path>/rules.yml tools/rules.yml                                    # refresh the snapshot
+python3 -I tools/gen_agent_rules.py                                    # write
+python3 -I tools/gen_agent_rules.py --check                            # exit 1 if stale
+python3 -I tools/check_rule_citations.py                               # cited IDs exist
 ```
 
 `python-style.md` and `testing.md` are copied from doc 08 and are not generated.

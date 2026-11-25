@@ -1,0 +1,33 @@
+# CI for this template repository itself (not the generated services; their pipeline is
+# templates/service/template/.gitlab-ci.yml).
+# Implements AGT-010/AGT-011 (rule files stay generated and within limits), CIC-001 (a root
+# .gitlab-ci.yml that must pass before merge), CIC-002 (merge request events and default branch),
+# CIC-007 (pinned job image), CIC-008 (timeout, interruptible).
+#
+# NOT VERIFIED: not run in GitLab and not linted with GitLab's CI lint (no instance access).
+# ASSUMPTION: (F4) GitLab tier and runners. <approved-registry> and the digest are placeholders.
+# TODO: also run `copier copy` plus `make check` on the generated project in a job (needs uv and
+# network egress to the approved package index).
+# TODO: tools/rules.yml is a snapshot of `scripts/check_docs.py --export` from the standards repo;
+# refresh it when the docs change (it cannot be regenerated here because the docs live elsewhere).
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+default:
+  image: <approved-registry>/python@sha256:<digest>
+  interruptible: true
+  timeout: 10 minutes
+
+stages: [validate]
+
+# Rule files under .claude/rules must match what the generator writes from tools/rules.yml, and
+# every rule ID cited in the template and the example must exist and not be retired.
+rule-checks:
+  stage: validate
+  script:
+    - python3 -I tools/gen_agent_rules.py --check
+    - python3 -I tools/check_rule_citations.py
+  allow_failure: false
