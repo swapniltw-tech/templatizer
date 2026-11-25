@@ -6,6 +6,11 @@
 # Default owner for everything
 * @{{ platform_group }}
 
+[Build and quality gate (PRC-026)]
+/Makefile @{{ platform_group }} @{{ security_group }}
+/Dockerfile @{{ platform_group }} @{{ security_group }}
+/pyproject.toml @{{ platform_group }} @{{ security_group }}
+
 [Infrastructure]
 /infra/ @{{ platform_group }} @{{ security_group }}
 /.gitlab-ci.yml @{{ platform_group }} @{{ security_group }}
@@ -19,6 +24,7 @@
 [AI registry and prompts]
 /registry/ @example-org/ai-governance @{{ platform_group }}
 /prompts/ @example-org/ai-governance @{{ platform_group }}
+/evals/ @example-org/ai-governance @{{ platform_group }}
 /evals/**/thresholds.yaml @example-org/ai-governance
 
 [Architecture decisions and fitness tests]

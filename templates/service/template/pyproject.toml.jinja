@@ -98,6 +98,7 @@ addopts = [
 ]
 timeout = "30"  # native table expects a string for this option (doc 24)
 filterwarnings = ["error"]
+xfail_strict = true  # TST-041: an unexpectedly passing xfail fails the run
 markers = [
     "integration: needs real dependencies (containers or emulators)",
     "contract: consumer or provider contract test",
