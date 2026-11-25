@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from {{ package_name }}.config import Settings
+from {{ package_name }}.domain.errors import DomainError
 from {{ package_name }}.main import create_app
 
 
@@ -55,3 +56,20 @@ def test_unhandled_error_returns_problem_without_internals() -> None:
     assert response.headers["content-type"].startswith("application/problem+json")
     assert "secret internal detail" not in response.text
     assert response.json()["title"] == "Internal Server Error"
+
+
+def test_domain_error_maps_to_422_problem_without_message() -> None:
+    class QuoteRejectedError(DomainError):
+        code = "quote_rejected"
+
+    app = create_app(Settings(_env_file=None))
+
+    @app.get("/rejected")
+    def rejected() -> None:
+        msg = "internal reason"
+        raise QuoteRejectedError(msg)
+
+    response = TestClient(app).get("/rejected")
+    assert response.status_code == 422
+    assert response.json()["code"] == "quote_rejected"
+    assert "internal reason" not in response.text
