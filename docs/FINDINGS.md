@@ -104,3 +104,10 @@ Status key: **open** = needs a decision; **worked around** = the template picked
 ## F-17 No authentication pattern for the example endpoint
 - **Docs:** API-007 (every operation declares its auth scheme; none is public by default), TST-046 (every endpoint that enforces authorization needs a deny-path test). The docs I used (00, 03, 06, 07, 08, 09, 10, 16, 24) do not define the org's authn/authz mechanism; doc 02 owns it and was out of this task's reading list.
 - **Done:** the reference service's premium-estimate operation is declared public (`security: []`) with a `TODO:`; no authorization is enforced, so TST-046 does not yet apply. Do not copy this endpoint into a real service without adding auth.
+
+## Cold-read of the README routing row "Start a new service from scratch" (09, 00, 03, 01, 24, 16, 06, 07, 08)
+Done from the template builder's seat. Doc 01 was **not** read for this build (it is in the row but not in the brief's list), so its rules are unchecked.
+
+- **Contradictions:** F-02 (pytest/`make test`), F-03 (`--disable-socket`), F-04 (`lint-imports` placement), F-07 (ARC-016 vs STR-005), F-09 (digest pinning vs matrix), F-06 (`trace_id`).
+- **Undecided points:** web framework (F-01); test client (F-13); redaction key list (F-05); auth pattern (F-17); service tier and coverage floor (F17); GitLab tier and CODEOWNERS enforcement (F4); Terraform final (F3); whether `domain/` may import pydantic (F14); Claude Code approval (F16).
+- **Missing steps:** no step says how to create the `uv.lock` or generate `docs/api/openapi.yaml` (the template does both in `_tasks`); no `AGENTS.md` content (F-11); no runbook template location for README's required runbook link (STR-004, doc 18 owns it; README has a `TODO:`); the order "git init, then `check_ignore.sh`" is implicit (the script needs a git work tree).
